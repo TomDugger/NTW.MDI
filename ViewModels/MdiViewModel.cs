@@ -52,28 +52,24 @@ namespace NTW.Mdi.ViewModels
                 {
                     if (!active)
                     {
-                        MainCanvas.Cursor = Cursors.None;
-                        _MoveElement = value;
-                        _MoveElement.Width = _MoveElement.ActualWidth;
-                        _MoveElement.Height = _MoveElement.ActualHeight;
-                        MainGrid.Children.Remove(value);
-
-                        MainCanvas.Children.Add(value);
-                        MainCanvas.Background = new SolidColorBrush(Color.FromArgb(50, 0, 0, 0));
-                        active = true;
-
                         //так как я ничего сверх крутого не придумал то просто заполним панель прямо на лету
                         //хоть это и не есть правильно
+                        double localX = 0, localY = 0;
                         for (int i = 0; i < MainGrid.RowDefinitions.Count; i++)
+                        {
                             for (int j = 0; j < MainGrid.ColumnDefinitions.Count; j++)
                             {
                                 Rectangle rec = new Rectangle();
                                 rec.Name = "_" + i + "_" + j;
                                 rec.Fill = new SolidColorBrush(Colors.Maroon);
 
-                                rec.Margin = new Thickness(5);
+                                Canvas.SetLeft(rec, localX);
+                                Canvas.SetTop(rec, localY);
 
-                                rec.MouseMove += new MouseEventHandler((s, e) =>
+                                rec.Width = MainGrid.ColumnDefinitions[j].ActualWidth;
+                                rec.Height = MainGrid.RowDefinitions[i].ActualHeight;
+
+                                rec.MouseEnter += new MouseEventHandler((s, e) =>
                                 {
                                     (s as Rectangle).Fill = new SolidColorBrush(Colors.Yellow);
                                     string[] spl = (s as Rectangle).Name.Split(new char[] { '_' }, StringSplitOptions.RemoveEmptyEntries);
@@ -81,11 +77,27 @@ namespace NTW.Mdi.ViewModels
                                     NewColumnGrid = Convert.ToInt32(spl[1]);
                                 });
 
-                                Grid.SetRow(rec, i);
-                                Grid.SetColumn(rec, j);
+                                rec.MouseLeave += new MouseEventHandler((s, e) =>
+                                {
+                                    (s as Rectangle).Fill = new SolidColorBrush(Colors.Maroon);
+                                });
 
-                                MainGrid.Children.Insert(MainGrid.Children.Count - 1, rec);
+                                localX += MainGrid.ColumnDefinitions[j].ActualWidth;
+
+                                MainCanvas.Children.Add(rec);
                             }
+                            localY += MainGrid.RowDefinitions[i].ActualHeight;
+                        }
+
+                        MainCanvas.Cursor = Cursors.None;
+                        _MoveElement = value;
+                        _MoveElement.Width = _MoveElement.ActualWidth;
+                        _MoveElement.Height = _MoveElement.ActualHeight;
+                        MainGrid.Children.Remove(value);
+
+                        MainCanvas.Children.Add(value);
+                        MainCanvas.Background = new SolidColorBrush(Colors.Transparent);
+                        active = true;
 
                     #if DEBUG
                         Console.WriteLine("Установка выделенного объекта");
@@ -107,11 +119,11 @@ namespace NTW.Mdi.ViewModels
 
                         active = false;
                         #region Удаление разметки отображения
-                        var recs = from r in MainGrid.Children.OfType<Rectangle>()
+                        var recs = from r in MainCanvas.Children.OfType<Rectangle>()
                                    select r;
 
                         foreach (Rectangle r in recs.ToList())
-                            MainGrid.Children.Remove(r); 
+                            MainCanvas.Children.Remove(r); 
                         #endregion
                     }
                     #if DEBUG
