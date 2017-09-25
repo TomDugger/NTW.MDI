@@ -49,13 +49,16 @@ namespace NTW.Mdi.ViewModels
         {
             MainGrid = mgrid;
             MainCanvas = mcanvas;
+            CellColor = new SolidColorBrush(Colors.DodgerBlue);
         }
 
         #region Public
+        public Brush CellColor { get; set; }
+
         public Point StarPoint
         {
             get { return _StarPoint; }
-            set { _StarPoint = value; }
+            set { _StarPoint = value; Debug.WriteLine(value); }
         }
 
         public MdiContainer MoveElement 
@@ -67,6 +70,7 @@ namespace NTW.Mdi.ViewModels
                     {
                         //так как я ничего сверх крутого не придумал то просто заполним панель прямо на лету
                         //хоть это и не есть правильно
+                        #region MyRegion
                         double localX = 0, localY = 0;
                         Tempare.Clear();
                         for (int i = 0; i < MainGrid.RowDefinitions.Count; i++)
@@ -75,50 +79,42 @@ namespace NTW.Mdi.ViewModels
                             {
                                 Rectangle rec = new Rectangle();
                                 rec.Name = "_" + i + "_" + j;
-                                rec.Fill = new SolidColorBrush(Colors.Maroon);
+                                rec.Stroke = CellColor;
 
-                                Canvas.SetLeft(rec, localX);
-                                Canvas.SetTop(rec, localY);
+                                Grid.SetColumn(rec, j);
+                                Grid.SetRow(rec, i);
 
-                                rec.Width = MainGrid.ColumnDefinitions[j].ActualWidth;
-                                rec.Height = MainGrid.RowDefinitions[i].ActualHeight;
-
-                                rec.MouseEnter += new MouseEventHandler((s, e) =>
+                                Tempare.Add(new GenTemp
                                 {
-                                    string[] spl = (s as Rectangle).Name.Split(new char[] { '_' }, StringSplitOptions.RemoveEmptyEntries);
-                                    if(NewRowGrid == Convert.ToInt32(spl[0]) && NewColumnGrid == Convert.ToInt32(spl[1]))
-                                    {
-                                        (s as Rectangle).Fill = new SolidColorBrush(Colors.Yellow);
-                                    }
+                                    X = localX,
+                                    Y = localY,
+                                    Width = MainGrid.ColumnDefinitions[j].ActualWidth,
+                                    Height = MainGrid.RowDefinitions[i].ActualHeight,
+                                    Column = j,
+                                    Row = i
                                 });
 
-                                rec.MouseLeave += new MouseEventHandler((s, e) =>
-                                {
-                                    (s as Rectangle).Fill = new SolidColorBrush(Colors.Maroon);
-                                });
+                                MainGrid.Children.Insert(0, rec);
 
                                 localX += MainGrid.ColumnDefinitions[j].ActualWidth;
-
-                                Tempare.Add(new GenTemp { X = localX, Y = localY, Width = MainGrid.ColumnDefinitions[j].ActualWidth, Height = MainGrid.RowDefinitions[i].ActualHeight, Column = j, Row = i });
-                                
-                                MainCanvas.Children.Add(rec);
                             }
                             localY += MainGrid.RowDefinitions[i].ActualHeight;
-                        }
+                        } 
+                        #endregion
 
                         MainCanvas.Cursor = Cursors.None;
                         _MoveElement = value;
-                        _MoveElement.Width = _MoveElement.ActualWidth;
-                        _MoveElement.Height = _MoveElement.ActualHeight;
+                        _MoveElement.Opacity = 0.6;
+                        if (_MoveElement.ActualWidth != 0 && _MoveElement.ActualHeight != 0)
+                        {
+                            _MoveElement.Width = _MoveElement.ActualWidth;
+                            _MoveElement.Height = _MoveElement.ActualHeight;
+                        }
                         MainGrid.Children.Remove(value);
 
                         MainCanvas.Children.Add(value);
                         MainCanvas.Background = new SolidColorBrush(Colors.Transparent);
                         active = true;
-
-                    #if DEBUG
-                        Console.WriteLine("Установка выделенного объекта");
-                    #endif
                     }
                 }
                 else
@@ -127,25 +123,41 @@ namespace NTW.Mdi.ViewModels
                     {
                         MainCanvas.Cursor = null;
                         MainCanvas.Children.Remove(_MoveElement);
-                        MainGrid.Children.Insert(MainGrid.Children.Count - 1, _MoveElement);
                         _MoveElement.Width = _MoveElement.Height = double.NaN;
-                        Grid.SetRow(_MoveElement, NewRowGrid);
-                        Grid.SetColumn(_MoveElement, NewColumnGrid);
+                        _MoveElement.Opacity = 1;
+                        //1. предворительно проверяем есть ли какой либо элемент в данной ячейке
+                        var ress = from r in MainGrid.Children.OfType<MdiContainer>()
+                                   where Grid.GetRow(r) == NewRowGrid && Grid.GetColumn(r) == NewColumnGrid
+                                   select r;
+
+                        var res = ResultInRowColumn(NewRowGrid, NewColumnGrid);
+                        if (res.Count() == 0)
+                        {
+                            MainGrid.Children.Insert(MainGrid.Children.Count - 1, _MoveElement);
+
+                            Grid.SetRow(_MoveElement, NewRowGrid);
+                            Grid.SetColumn(_MoveElement, NewColumnGrid);
+                        }
+                        else
+                        {
+                            UIElement[] uis = _MoveElement.Children.ToArray();
+                            foreach (UIElement ui in uis)
+                                (res.ToList()[0] as MdiContainer).Children.Add(ui);
+                            _MoveElement.Children.Clear();
+
+                        }
                         _MoveElement = null;
                         MainCanvas.Background = null;
 
                         active = false;
                         #region Удаление разметки отображения
-                        var recs = from r in MainCanvas.Children.OfType<Rectangle>()
+                        var recs = from r in MainGrid.Children.OfType<Rectangle>()
                                    select r;
 
                         foreach (Rectangle r in recs.ToList())
-                            MainCanvas.Children.Remove(r); 
+                            MainGrid.Children.Remove(r); 
                         #endregion
                     }
-                    #if DEBUG
-                    Console.WriteLine("выделенный элемент очищен");
-                    #endif
                 }
             }
         }
@@ -154,18 +166,13 @@ namespace NTW.Mdi.ViewModels
         {
             get { return _X - _StarPoint.X; }
             set {
-
                 foreach(GenTemp gt in Tempare)
                     if (value >= gt.X && value <= gt.X + gt.Width)
                     {
                         NewColumnGrid = gt.Column;
                         break;
                     }
-
                 _X = value; Change("X");
-                #if DEBUG
-                Console.WriteLine("x => " + value); 
-                #endif
             }
         }
 
@@ -180,11 +187,27 @@ namespace NTW.Mdi.ViewModels
                         break;
                     }
                 _Y = value; Change("Y"); 
-                #if DEBUG
-                Console.WriteLine("y => " + value); 
-                #endif
             }
         }
+
+        public void ChangeRectangle()
+        {
+            var recs = from r in MainGrid.Children.OfType<Rectangle>()
+                       select r;
+            foreach (Rectangle rec in recs)
+                if (rec.Name == "_" + NewRowGrid + "_" + NewColumnGrid)
+                    rec.Fill = CellColor;
+                else
+                    rec.Fill = new SolidColorBrush(Colors.Transparent);
+        }
+
+        public IEnumerable<MdiContainer> ResultInRowColumn(int Row, int Column)
+        {
+            return from ui in MainGrid.Children.OfType<MdiContainer>()
+                   where Grid.GetColumn(ui) == Column && Grid.GetRow(ui) == Row
+                   select ui;
+        }
+
         #endregion
 
         #region INotifyPropertyChanged Members

@@ -49,6 +49,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Container\Caption.cs" />
     <Compile Include="Container\MdiContainer.xaml.cs">
       <DependentUpon>MdiContainer.xaml</DependentUpon>
     </Compile>
