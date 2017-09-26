@@ -15,6 +15,7 @@ using NTW.Mdi.ViewModels;
 using System.Windows.Markup;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics;
 
 namespace NTW.Mdi.Container
 {
@@ -24,6 +25,11 @@ namespace NTW.Mdi.Container
     [ContentProperty("Children")]
     public partial class MdiContainer : UserControl
     {
+        #region Private
+        Point StartPoint = new Point();
+        bool active = false;
+        #endregion
+
         internal MdiContainer()
         {
             InitializeComponent();
@@ -114,16 +120,35 @@ namespace NTW.Mdi.Container
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
-                MdiContainer mc = new MdiContainer();
-                mc.Children.Add(ContentList.SelectedContent as UIElement);
-                mc.Height = ContentList.ActualHeight;
-                mc.Width = ContentList.ActualWidth;
+                active = true;
+                StartPoint = Mouse.GetPosition(sender as TabControl);
+                Debug.WriteLine("moveCoordinate " + StartPoint);
+            }
+        }
 
-                Children.Remove(ContentList.SelectedContent as UIElement);
+        private void ContentList_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed && active)
+            {
+                Point p = Mouse.GetPosition(sender as TabControl);
+                Debug.WriteLine("downCoordinate " + p + " / " + StartPoint);
+                if ((StartPoint.X + 1 <= p.X ||
+                    StartPoint.X - 1 >= p.X) ||
+                    (StartPoint.Y + 1 <= p.Y ||
+                    StartPoint.Y - 1 >= p.Y))
+                {
+                    MdiContainer mc = new MdiContainer();
+                    mc.Children.Add(ContentList.SelectedContent as UIElement);
+                    mc.Height = ContentList.ActualHeight;
+                    mc.Width = ContentList.ActualWidth;
 
-                //Point p = Mouse.GetPosition(sender as TabControl);
-                ((sender as TabControl).DataContext as MdiViewModel).StarPoint = Mouse.GetPosition(sender as TabControl);
-                ((sender as TabControl).DataContext as MdiViewModel).MoveElement = mc;
+                    Children.Remove(ContentList.SelectedContent as UIElement);
+
+                    ((sender as TabControl).DataContext as MdiViewModel).StarPoint = Mouse.GetPosition(sender as TabControl);
+                    ((sender as TabControl).DataContext as MdiViewModel).MoveElement = mc;
+                    active = false;
+                    StartPoint = new Point();
+                }
             }
         }
     }

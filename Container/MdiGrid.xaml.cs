@@ -44,16 +44,21 @@ namespace NTW.Mdi.Container
 
                 if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems.Count >= 1)
                 {
-                    MdiContainer mc = new MdiContainer();//контейнер отображения
                     UIElement ui = e.NewItems[0] as UIElement;//сам пользовательский элемент
+                    if (ui is GridSplitter)
+                        MainGrid.Children.Add(ui);
+                    else
+                    {
+                        MdiContainer mc = new MdiContainer();//контейнер отображения
 
-                    BindingOperations.SetBinding(mc, Grid.RowProperty, new Binding("(Grid.Row)") { Source = ui});
-                    BindingOperations.SetBinding(mc, Grid.ColumnProperty, new Binding("(Grid.Column)") { Source = ui });
-                    BindingOperations.SetBinding(mc, Grid.RowSpanProperty, new Binding("(Grid.RowSpan)") { Source = ui });
-                    BindingOperations.SetBinding(mc, Grid.ColumnSpanProperty, new Binding("(Grid.ColumnSpan)") { Source = ui });
+                        BindingOperations.SetBinding(mc, Grid.RowProperty, new Binding("(Grid.Row)") { Source = ui });
+                        BindingOperations.SetBinding(mc, Grid.ColumnProperty, new Binding("(Grid.Column)") { Source = ui });
+                        //BindingOperations.SetBinding(mc, Grid.RowSpanProperty, new Binding("(Grid.RowSpan)") { Source = ui });
+                        //BindingOperations.SetBinding(mc, Grid.ColumnSpanProperty, new Binding("(Grid.ColumnSpan)") { Source = ui });
 
-                    mc.Children.Add(ui);
-                    MainGrid.Children.Insert(MainGrid.Children.Count != 0? MainGrid.Children.Count - 1 : 0, mc);
+                        mc.Children.Add(ui);
+                        MainGrid.Children.Insert(MainGrid.Children.Count != 0 ? MainGrid.Children.Count - 1 : 0, mc);
+                    }
                 }
                 else if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems.Count >= 1)
                 {

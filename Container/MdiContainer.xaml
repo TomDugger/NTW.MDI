@@ -18,6 +18,6 @@
 
         <Label Grid.Row="1" Name="ContentPost" Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
 
-        <TabControl Grid.Row="1" Name="ContentList" Padding="0" TabStripPlacement="Bottom" Visibility="Hidden" PreviewMouseDown="ContentList_PreviewMouseDown" />
+        <TabControl Grid.Row="1" Name="ContentList" Padding="0" TabStripPlacement="Bottom" Visibility="Hidden" PreviewMouseDown="ContentList_PreviewMouseDown" PreviewMouseMove="ContentList_PreviewMouseMove" />
     </Grid>
 </UserControl>
