@@ -58,7 +58,7 @@ namespace NTW.Mdi.ViewModels
         public Point StarPoint
         {
             get { return _StarPoint; }
-            set { _StarPoint = value; Debug.WriteLine(value); }
+            set { _StarPoint = value; }
         }
 
         public MdiContainer MoveElement 
@@ -196,7 +196,15 @@ namespace NTW.Mdi.ViewModels
                        select r;
             foreach (Rectangle rec in recs)
                 if (rec.Name == "_" + NewRowGrid + "_" + NewColumnGrid)
+                {
                     rec.Fill = CellColor;
+                    //выставление размеров для выбранной 
+                    if (_MoveElement != null)
+                    {
+                        _MoveElement.Width = rec.ActualWidth;
+                        _MoveElement.Height = rec.ActualHeight;
+                    }
+                }
                 else
                     rec.Fill = new SolidColorBrush(Colors.Transparent);
         }

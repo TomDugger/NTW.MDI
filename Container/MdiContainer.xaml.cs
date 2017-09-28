@@ -28,12 +28,16 @@ namespace NTW.Mdi.Container
         #region Private
         Point StartPoint = new Point();
         bool active = false;
+
+        MdiViewModel View;
         #endregion
 
-        internal MdiContainer()
+        internal MdiContainer(MdiViewModel view)
         {
             InitializeComponent();
-
+            View = view;
+            BindingOperations.SetBinding(this, Canvas.LeftProperty, new Binding("X") { Source = view, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
+            BindingOperations.SetBinding(this, Canvas.TopProperty, new Binding("Y") { Source = view, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
             Children = new ObservableCollection<UIElement>();
             Children.CollectionChanged+=new System.Collections.Specialized.NotifyCollectionChangedEventHandler((sender, e) => {
                 if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems.Count >= 1)
@@ -71,6 +75,7 @@ namespace NTW.Mdi.Container
                         ContentPost.Visibility = System.Windows.Visibility.Visible;
                         ContentList.Visibility = System.Windows.Visibility.Hidden;
                         ContentPost.Content = Children[0];
+                        BindingOperations.SetBinding(HeaderCaption, Label.ContentProperty, new Binding("Content.(cap:Caption.Header)") { Source = ContentPost, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
                     }
                     else //single реализация
                     {
@@ -101,7 +106,7 @@ namespace NTW.Mdi.Container
 
         private void TabItem_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            MdiContainer mc = new MdiContainer();
+            MdiContainer mc = new MdiContainer(View);
             mc.Children.Add((sender as TabItem).Content as UIElement);
             Children.Remove((sender as TabItem).Content as UIElement);
 
@@ -112,8 +117,8 @@ namespace NTW.Mdi.Container
         private void Border_MouseDown(object sender, MouseButtonEventArgs e)
         {
             //фиксируем начальную точку перемещения
-            ((sender as Border).DataContext as MdiViewModel).StarPoint = Mouse.GetPosition(sender as Border);
-            ((sender as Border).DataContext as MdiViewModel).MoveElement = this;
+            View.StarPoint = Mouse.GetPosition(sender as Border);
+            View.MoveElement = this;
         }
 
         private void ContentList_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -122,7 +127,6 @@ namespace NTW.Mdi.Container
             {
                 active = true;
                 StartPoint = Mouse.GetPosition(sender as TabControl);
-                Debug.WriteLine("moveCoordinate " + StartPoint);
             }
         }
 
@@ -131,21 +135,20 @@ namespace NTW.Mdi.Container
             if (e.LeftButton == MouseButtonState.Pressed && active)
             {
                 Point p = Mouse.GetPosition(sender as TabControl);
-                Debug.WriteLine("downCoordinate " + p + " / " + StartPoint);
                 if ((StartPoint.X + 1 <= p.X ||
                     StartPoint.X - 1 >= p.X) ||
                     (StartPoint.Y + 1 <= p.Y ||
                     StartPoint.Y - 1 >= p.Y))
                 {
-                    MdiContainer mc = new MdiContainer();
+                    MdiContainer mc = new MdiContainer(View);
                     mc.Children.Add(ContentList.SelectedContent as UIElement);
                     mc.Height = ContentList.ActualHeight;
                     mc.Width = ContentList.ActualWidth;
 
                     Children.Remove(ContentList.SelectedContent as UIElement);
 
-                    ((sender as TabControl).DataContext as MdiViewModel).StarPoint = Mouse.GetPosition(sender as TabControl);
-                    ((sender as TabControl).DataContext as MdiViewModel).MoveElement = mc;
+                    View.StarPoint = Mouse.GetPosition(sender as TabControl);
+                    View.MoveElement = mc;
                     active = false;
                     StartPoint = new Point();
                 }

@@ -25,6 +25,8 @@ namespace NTW.Mdi.Container
         public ObservableCollection<UIElement> Children { get; set; }
 
         public Brush CellColor { get { return (this.DataContext as MdiViewModel).CellColor; } set { (this.DataContext as MdiViewModel).CellColor = value; } }
+
+        public MdiViewModel View { get; set; }
         #endregion
 
         public MdiGrid()
@@ -37,11 +39,10 @@ namespace NTW.Mdi.Container
 
             MdiViewModel view = new MdiViewModel(MainGrid, MainCanvas);
 
-            this.DataContext = view;
+            View = view;
 
             Children = new ObservableCollection<UIElement>();
             Children.CollectionChanged += new NotifyCollectionChangedEventHandler((s, e) => {
-
                 if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems.Count >= 1)
                 {
                     UIElement ui = e.NewItems[0] as UIElement;//сам пользовательский элемент
@@ -49,8 +50,7 @@ namespace NTW.Mdi.Container
                         MainGrid.Children.Add(ui);
                     else
                     {
-                        MdiContainer mc = new MdiContainer();//контейнер отображения
-
+                        MdiContainer mc = new MdiContainer(View);//контейнер отображения
                         BindingOperations.SetBinding(mc, Grid.RowProperty, new Binding("(Grid.Row)") { Source = ui });
                         BindingOperations.SetBinding(mc, Grid.ColumnProperty, new Binding("(Grid.Column)") { Source = ui });
                         //BindingOperations.SetBinding(mc, Grid.RowSpanProperty, new Binding("(Grid.RowSpan)") { Source = ui });
@@ -86,15 +86,15 @@ namespace NTW.Mdi.Container
         private void MainGrid_PreviewMouseMove(object sender, MouseEventArgs e)
         {
             Point p = Mouse.GetPosition(sender as IInputElement);
-            (this.DataContext as MdiViewModel).X = p.X;
-            (this.DataContext as MdiViewModel).Y = p.Y;
+            this.View.X = p.X;
+            this.View.Y = p.Y;
 
-            (this.DataContext as MdiViewModel).ChangeRectangle();
+            this.View.ChangeRectangle();
         }
 
         private void MainGrid_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
-            (this.DataContext as MdiViewModel).MoveElement = null;
+            this.View.MoveElement = null;
         }
     }
 }

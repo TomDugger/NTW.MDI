@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:cap="clr-namespace:NTW.Mdi.Container"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300" Canvas.Left="{Binding Path=X}" Canvas.Top="{Binding Path=Y}" Margin="5">
+             d:DesignHeight="300" d:DesignWidth="300" Margin="5">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="24" />
