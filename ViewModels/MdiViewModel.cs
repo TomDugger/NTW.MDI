@@ -38,6 +38,7 @@ namespace NTW.Mdi.ViewModels
         private int NewRowGrid = 0;
         private int NewColumnGrid = 0;
         private List<GenTemp> Tempare = new List<GenTemp>(1);
+        private TypePanel VisualType = TypePanel.StackPanel;
         #endregion
 
         public MdiViewModel()
@@ -121,33 +122,9 @@ namespace NTW.Mdi.ViewModels
                 {
                     if (active)
                     {
-                        MainCanvas.Cursor = null;
+                        MainCanvas.Cursor = null;//предпологается что контрол пренадлежал Canvas до того как его переместили
                         MainCanvas.Children.Remove(_MoveElement);
-                        _MoveElement.Width = _MoveElement.Height = double.NaN;
-                        _MoveElement.Opacity = 1;
-                        //1. предворительно проверяем есть ли какой либо элемент в данной ячейке
-                        var ress = from r in MainGrid.Children.OfType<MdiContainer>()
-                                   where Grid.GetRow(r) == NewRowGrid && Grid.GetColumn(r) == NewColumnGrid
-                                   select r;
-
-                        var res = ResultInRowColumn(NewRowGrid, NewColumnGrid);
-                        if (res.Count() == 0)
-                        {
-                            MainGrid.Children.Insert(MainGrid.Children.Count - 1, _MoveElement);
-
-                            Grid.SetRow(_MoveElement, NewRowGrid);
-                            Grid.SetColumn(_MoveElement, NewColumnGrid);
-                        }
-                        else
-                        {
-                            UIElement[] uis = _MoveElement.Children.ToArray();
-                            foreach (UIElement ui in uis)
-                                (res.ToList()[0] as MdiContainer).Children.Add(ui);
-                            _MoveElement.Children.Clear();
-
-                        }
-                        _MoveElement = null;
-                        MainCanvas.Background = null;
+                        AlterSetElement();
 
                         active = false;
                         #region Удаление разметки отображения
@@ -216,6 +193,33 @@ namespace NTW.Mdi.ViewModels
                    select ui;
         }
 
+        #endregion
+
+        #region Void
+        public void AlterSetElement()
+        {
+            _MoveElement.Width = _MoveElement.Height = double.NaN;
+            _MoveElement.Opacity = 1;
+            //1. предворительно проверяем есть ли какой либо элемент в данной ячейке
+            var res = ResultInRowColumn(NewRowGrid, NewColumnGrid);
+            if (res.Count() == 0)
+            {
+                MainGrid.Children.Insert(MainGrid.Children.Count - 1, _MoveElement);
+
+                Grid.SetRow(_MoveElement, NewRowGrid);
+                Grid.SetColumn(_MoveElement, NewColumnGrid);
+            }
+            else
+            {
+                UIElement[] uis = _MoveElement.Children.ToArray();
+                foreach (UIElement ui in uis)
+                    (res.ToList()[0] as MdiContainer).Children.Add(ui);
+                _MoveElement.Children.Clear();
+
+            }
+            _MoveElement = null;
+            MainCanvas.Background = null;
+        }
         #endregion
 
         #region INotifyPropertyChanged Members

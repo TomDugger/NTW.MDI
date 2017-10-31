@@ -90,11 +90,12 @@ namespace NTW.Mdi.Container
         public ObservableCollection<UIElement> Children { get; set; }
         #endregion
 
+        #region Handlers
         private TabItem GetElement(UIElement element)
         {
             return (from r in ContentList.Items.OfType<TabItem>()
-                   where r.Content == element
-                   select r).First();
+                    where r.Content == element
+                    select r).First();
         }
 
         private void CreateTabItem(UIElement element)
@@ -153,6 +154,7 @@ namespace NTW.Mdi.Container
                     StartPoint = new Point();
                 }
             }
-        }
+        } 
+        #endregion
     }
 }

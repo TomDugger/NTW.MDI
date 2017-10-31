@@ -56,8 +56,18 @@ namespace NTW.Mdi.Container
                         //BindingOperations.SetBinding(mc, Grid.RowSpanProperty, new Binding("(Grid.RowSpan)") { Source = ui });
                         //BindingOperations.SetBinding(mc, Grid.ColumnSpanProperty, new Binding("(Grid.ColumnSpan)") { Source = ui });
 
+                        int ri = Grid.GetRow(e.NewItems[0] as UIElement);
+                        int ci = Grid.GetColumn(e.NewItems[0] as UIElement);
                         mc.Children.Add(ui);
-                        MainGrid.Children.Insert(MainGrid.Children.Count != 0 ? MainGrid.Children.Count - 1 : 0, mc);
+                        //требуется проверка элементов в ячейке в которую помещается элемент
+                        var ress = view.ResultInRowColumn(ri, ci);
+
+                        if (ress.Count() == 0)
+                            MainGrid.Children.Insert(MainGrid.Children.Count != 0 ? MainGrid.Children.Count - 1 : 0, mc);
+                        else
+                        {
+                            (ress.ToList()[0] as MdiContainer).Children.Add(ui);
+                        }
                     }
                 }
                 else if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems.Count >= 1)
